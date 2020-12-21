@@ -14,7 +14,7 @@ throughputs = zeros(1, MAX);
 doPowerControl = true;
 
 
-for theta = 0.05
+for theta = 0.5
     for loop = 1:MAX
         if(draw_cells == 1); figure(1); end
         radius = 3;
@@ -161,11 +161,5 @@ figure(1);
 xlabel('SIR (dB)');
 ylabel('Probability');
 title('CDF');
-figure(2);
-xlabel('SIR (dB)');
-ylabel("Throughput")
-%legend('type 1/3 power control');
-xline(-5);
-yline(0.03);
 end
 

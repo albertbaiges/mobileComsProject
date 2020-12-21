@@ -1,7 +1,10 @@
 function plotSNR(type, v, doPowerControl, doThroughput)
-global legendString
+global legendString throughputString
 if isempty(legendString)
     legendString = "";
+end
+if isempty(throughputString)
+    throughputString = "";
 end
 if(type ~= 1)
     frac = rat(type);
@@ -16,10 +19,12 @@ end
 legendString(end+1) = str;
 MAX = 1000;
 draw_cells = 0; % to draw the cells
+Lp_ref = 1;
+dref = 1;
 SIR_dB = zeros(1, MAX);
 throughputs = zeros(1, MAX);
-theta = 0.05;
-bandwidth = 100;
+theta = 0.5;
+bandwidth = 100*10^6;
 SIRGap = 4; %dB
 for loop = 1:MAX
     if(draw_cells == 1); figure(1); end
@@ -62,14 +67,11 @@ for loop = 1:MAX
     end
     
     % Pathloss of Central Cell
-    d = sqrt((xuser_ref - 0)^2 + (yuser_ref - 0)^2); %distance user-antenna
-    dref = 1;
-    Lp_ref = 1;
-    Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-    Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-    shdw = normrnd(0,desv); % in dB
-    interference = Lp_dB + shdw; % in dB
-    tier_center_int = 10^(interference/10); % in lineal
+    p = 1;
+	if(doPowerControl)
+        p = power_control(yuser_ref, yuser_ref, 0, 0, v, desv, theta);
+	end
+    desired_signal = p*gain(xuser_ref, yuser_ref, v, desv, Lp_ref, dref); % in lineal
     %POWER = 1/(sqrt(tier_center_int));
     %tier_center_dB = 10*log10(tier_center_int); % in dB
     
@@ -101,25 +103,15 @@ for loop = 1:MAX
             yuser = yt1(i) + r.*sin(sector);
             
             if type == 1 && (i == 5 || i == 6)
-                d = sqrt((xuser - 0)^2 + (yuser - 0)^2); %distance user-antenna
-                Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-                Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-                shdw = normrnd(0,desv); % in dB
-                interference = Lp_dB + shdw; % in dB
-                tier1r_Int = tier1r_Int + 10^(interference/10); % in lineal
+                tier1r_Int = tier1r_Int + gain(xuser, yuser, v, desv, Lp_ref, dref);
                 if(draw_cells == 1); plot(xuser, yuser, "*k", 'MarkerSize', 3); end
                 continue
             elseif (type == 1/3 && (i == 5 || i == 6) && k == 1)
-                d = sqrt((xuser - 0)^2 + (yuser - 0)^2); %distance user-antenna
-                Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-                Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-                shdw = normrnd(0,desv); % in dB
-                interference = Lp_dB + shdw; % in dB
                 p = 1;
                 if(doPowerControl)
                     p = power_control(xuser, yuser, xt1(i), yt1(i), v, desv, theta);
                 end
-                tier1r_Int = tier1r_Int + p*10^(interference/10); % in lineal
+                tier1r_Int = tier1r_Int + p*gain(xuser, yuser, v, desv, Lp_ref, dref); % in lineal
                 if(draw_cells == 1); plot(xuser, yuser, "*k", 'MarkerSize', 3); end
                 continue
             elseif (type == 1/9)
@@ -150,32 +142,17 @@ for loop = 1:MAX
             
             if type == 1 && (i == 8 || i == 9 || i == 10 || i == 11 || i == 12)
                 if(i == 8 && k == 0 && sector >= pi/3)
-                    d = sqrt((xuser - 0)^2 + (yuser - 0)^2); %distance user-antenna
-                    Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-                    Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-                    shdw = normrnd(0,desv); % in dB
-                    interference = Lp_dB + shdw; % in dB
-                    tier2r_Int = tier2r_Int + 10^(interference/10); % in lineal
+                    tier2r_Int = tier2r_Int + gain(xuser, yuser, v, desv, Lp_ref, dref); % in lineal
                     %tier2r_Int_dB = 10*log10(tier2r_Int); % in dB
                     if(draw_cells == 1); plot(xuser, yuser, "*k", 'MarkerSize', 3); end
                     continue
                 elseif(i == 8 && k == 1) || (i == 9 || i == 10 || i == 11)
-                    d = sqrt((xuser - 0)^2 + (yuser - 0)^2); %distance user-antenna
-                    Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-                    Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-                    shdw = normrnd(0,desv); % in dB
-                    interference = Lp_dB + shdw; % in dB
-                    tier2r_Int = tier2r_Int + 10^(interference/10); % in lineal
+                    tier2r_Int = tier2r_Int + gain(xuser, yuser, v, desv, Lp_ref, dref); % in lineal
                     %tier2r_Int_dB = 10*log10(tier2r_Int); % in dB
                     if(draw_cells == 1); plot(xuser, yuser, "*k", 'MarkerSize', 3); end
                     continue
                 elseif(i == 12) && (k == 1 || (k == 2 && sector < 5*pi/3 ))
-                    d = sqrt((xuser - 0)^2 + (yuser - 0)^2); %distance user-antenna
-                    Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-                    Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-                    shdw = normrnd(0,desv); % in dB
-                    interference = Lp_dB + shdw; % in dB
-                    tier2r_Int = tier2r_Int + 10^(interference/10); % in lineal
+                    tier2r_Int = tier2r_Int + gain(xuser, yuser, v, desv, Lp_ref, dref); % in lineal
                     %tier2r_Int_dB = 10*log10(tier2r_Int); % in dB
                     if(draw_cells == 1); plot(xuser, yuser, "*k", 'MarkerSize', 3); end
                     continue
@@ -184,27 +161,17 @@ for loop = 1:MAX
                 if(draw_cells == 1); plot(xuser, yuser, "*g", 'MarkerSize', 3); end
                 
             elseif type == 1/3 && (i == 8 || i == 9 || i == 10 || i == 11 || i == 12) && k == 1
-                d = sqrt((xuser - 0)^2 + (yuser - 0)^2); %distance user-antenna
-                Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-                Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-                shdw = normrnd(0,desv); % in dB
-                interference = Lp_dB + shdw; % in dB
                 p = 1;
                 if(doPowerControl)
                     p = power_control(xuser, yuser, xt2(i), yt2(i), v, desv, theta);
                 end
-                tier2r_Int = tier2r_Int + p*10^(interference/10); % in lineal
+                tier2r_Int = tier2r_Int + p*gain(xuser, yuser, v, desv, Lp_ref, dref); % in lineal
                 %tier2r_Int_dB = 10*log10(tier2r_Int); % in dB
                 if(draw_cells == 1); plot(xuser, yuser, "*k", 'MarkerSize', 3); end
                 continue
                 
             elseif type == 1/9 && (i == 8 || i == 10 || i == 12) && k == 1
-                d = sqrt((xuser - 0)^2 + (yuser - 0)^2); %distance user-antenna
-                Lp_lin = Lp_ref * (dref/d)^v; % pathloss in lineal
-                Lp_dB = 10*log10(Lp_lin); % pathloss in dB
-                shdw = normrnd(0,desv); % in dB
-                interference = Lp_dB + shdw; % in dB
-                tier2r_Int = tier2r_Int + 10^(interference/10); % in lineal
+                tier2r_Int = tier2r_Int + gain(xuser, yuser, v, desv, Lp_ref, dref); % in lineal
                 %tier2r_Int_dB = 10*log10(tier2r_Int); % in dB
                 if(draw_cells == 1); plot(xuser, yuser, "*k", 'MarkerSize', 3); end
                 continue
@@ -212,7 +179,7 @@ for loop = 1:MAX
             if(draw_cells == 1); plot(xuser, yuser, "*g", 'MarkerSize', 3); end
         end
     end
-    SIR = tier_center_int/(tier1r_Int+tier2r_Int); % in lineal + tier2r_Int
+    SIR = desired_signal/(tier1r_Int+tier2r_Int); % in lineal + tier2r_Int
     SIR_dB(loop) = 10*log10(SIR); % in dB
     %disp(SIR_dB);
     if(doThroughput)
@@ -231,6 +198,8 @@ if(doThroughput)
     cdfplot(throughputs)
     xlabel("Throughput");
     ylabel("Probability");
+    throughputString(end+1) = "type " + fracName;
+    legend(throughputString(2:end));
     hold on;
 end
 end

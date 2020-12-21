@@ -10,7 +10,9 @@ while(true)
          "(2). Switch Reuse Factor(Currently: " + disptype + ")" + newline + ...
          "(3). Turn on/off Power Control (Currently: " + doPowerControl+")" + newline + ...
          "(4). Compute Troughtput (Currently: " + doThroughtput + ")" + newline + ...
-         "(5). Exit");
+         "(5). Change Pathloss Exponent (Currently: " + v + ")" + newline + ...
+         "(6). Run this option everytime plot windows are closed" + newline + ...
+         "(7). Exit");
       
     option = input("Select an option: ");
     switch(option)
@@ -46,6 +48,21 @@ while(true)
         case 4
             doThroughtput = ~doThroughtput;
         case 5
+            disp("(1). 3" + newline + ...
+                 "(2). 3.8" + newline + ...
+                 "(3). 4.5");
+             expo = input("Select the pathloss exponent: "); 
+             switch expo
+                 case 1
+                     v = 3;
+                 case 2
+                    v = 3.8;
+                 case 3
+                    v = 4.5;
+             end
+        case 6
+            clear global;
+        case 7
             break;
     end
     clc;
